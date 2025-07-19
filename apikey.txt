@@ -1,1 +1,1 @@
-вставить ключ API вместо этого текста
+REPLACE_THIS_TEXT_WITH_YOUR_MISTRAL_API_KEY
