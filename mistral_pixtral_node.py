@@ -44,7 +44,18 @@ class GF_MistralPixtralNode:
             
             if os.path.exists(key_file):
                 with open(key_file, 'r', encoding='utf-8') as f:
-                    return f.read().strip()
+                    api_key = f.read().strip()
+                    
+                    # Check if API key contains only ASCII characters (valid API key format)
+                    if not api_key.isascii():
+                        return None  # Invalid API key format
+                    
+                    # Check if it's not the placeholder text
+                    placeholder_indicators = ['вставить', 'ключ', 'replace', 'your', 'api', 'key', 'here', 'this', 'text']
+                    if len(api_key) < 10 or any(indicator in api_key.lower() for indicator in placeholder_indicators):
+                        return None  # Placeholder text detected
+                    
+                    return api_key
             else:
                 return None
         except Exception as e:
@@ -56,7 +67,7 @@ class GF_MistralPixtralNode:
             # Load API key from file
             api_key = self.load_api_key()
             if not api_key:
-                return ("Error: apikey.txt file not found or empty. Create apikey.txt file in node folder and paste your Mistral API key there.",)
+                return ("Error: API key not found or invalid. Please:\n1. Open apikey.txt file in the node folder\n2. Replace the placeholder text with your actual Mistral API key\n3. Save the file\n\nGet your API key from: https://console.mistral.ai/",)
             
             # Base URL for Mistral API
             api_url = "https://api.mistral.ai/v1/chat/completions"
