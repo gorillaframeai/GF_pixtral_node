@@ -6,6 +6,7 @@ Compatible with existing workflows
 import json
 import base64
 import os
+import random
 import requests
 from io import BytesIO
 from typing import List, Tuple
@@ -30,6 +31,7 @@ class GF_MistralPixtralNode:
                 "max_tokens": ("INT", {"default": 1000, "min": 1, "max": 4000}),
                 "temperature": ("FLOAT", {"default": 0.7, "min": 0.0, "max": 2.0, "step": 0.1}),
                 "batch_mode": (["concatenate", "individual"], {"default": "concatenate"}),
+                "use_random_seed": ("BOOLEAN", {"default": True}),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -40,6 +42,13 @@ class GF_MistralPixtralNode:
     RETURN_NAMES = ("response", "response_list")
     FUNCTION = "process"
     CATEGORY = "GF/AI"
+    
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        # Force re-execution when random seed is enabled
+        if kwargs.get("use_random_seed", True):
+            return random.random()  # Always return different value
+        return False
 
     # ---------- helpers ----------
     @staticmethod
@@ -81,6 +90,7 @@ class GF_MistralPixtralNode:
                 max_tokens,
                 temperature,
                 batch_mode,
+                use_random_seed,
                 image=None):
 
         api_key = self._load_api_key()
@@ -126,6 +136,11 @@ class GF_MistralPixtralNode:
                    "messages": messages,
                    "max_tokens": max_tokens,
                    "temperature": temperature}
+        
+        # Add random seed if enabled
+        if use_random_seed:
+            random_seed = random.randint(0, 2**32 - 1)
+            payload["random_seed"] = random_seed
 
         try:
             resp = requests.post(api_url, headers=headers, json=payload, timeout=120)
